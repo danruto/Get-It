@@ -12,7 +12,6 @@
 
 //TODO: regex check for urls in input field
 
-
 import Cocoa
 
 class ViewController: NSViewController {
@@ -48,7 +47,12 @@ class ViewController: NSViewController {
         
         
         NotificationCenter.default.addObserver(self, selector: #selector(openSettingsView), name: NSNotification.Name(rawValue: "openSettingsView"), object: nil)
+        
+        let pb = PasteboardWatcher()
+        pb.delegate = self
+        pb.startPolling()
     }
+    
     func openSettingsView(notif: AnyObject) {
         self.performSegue(withIdentifier: "settingsSegue", sender: self)
     }
@@ -124,7 +128,7 @@ class ViewController: NSViewController {
         
         //get input URLs
         let tempString = inputURLS.string!
-        let urls = tempString.characters.split{$0 == "\n"}.map(String.init)
+        let urls = tempString.characters.split{$0 == "\n"}.map { String($0) }
         if(urls.count > 0){
             var urlStr = " "
             for url in urls { urlStr = urlStr + url + " " }
@@ -256,4 +260,15 @@ class ViewController: NSViewController {
         task.launch()
     }
 
+}
+
+extension ViewController: PasteboardWatcherDelegate {
+    func onContentChanged(content: String) {
+        if content.starts(with: "http") {
+            // We only care if it is a url
+            inputURLS.textStorage?.append(NSAttributedString(string: content + "\n\n"))
+        }
+    }
+    
+    
 }
